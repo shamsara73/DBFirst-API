@@ -43,6 +43,12 @@ function generateSpecs(routes,models){
           version: '1.0.0',
           description: 'API documentation for the Express.js app with dynamic routes',
         },
+        components: {
+          securitySchemes: {
+            ApiKeyAuth: { type: 'apiKey', in: 'header', name: 'x-api-key' },
+          },
+        },
+        security: [{ ApiKeyAuth: [] }],
         paths:{}
       };
   
@@ -61,7 +67,7 @@ function generateSpecs(routes,models){
           if(method === 'GET'){
             summary = _path.includes("/{id}")? 'Get By ID':'Get All';
             parameters[0] = _path.includes("/{id}") && {"name":"id","description":"data's ID","in":"path","required":true,"type":"integer"};
-  
+
             if(_path.includes("/{id}")){
                 swaggerDefinition.paths[_path][method.toLowerCase()] = {
                     summary,
@@ -85,9 +91,14 @@ function generateSpecs(routes,models){
                     summary,
                     tags :[tags],
                     produces: ["application/json"],
+                    parameters: [
+                      {"name":"page","description":"Page number (default 1)","in":"query","required":false,"type":"integer"},
+                      {"name":"limit","description":"Page size (default/max set by server)","in":"query","required":false,"type":"integer"},
+                      {"name":"include","description":"Set to 'true' to eager-load associations","in":"query","required":false,"type":"boolean"},
+                    ],
                     responses: {
                       200: {
-                        description: 'Successful response',
+                        description: 'Successful response: { data: [...], meta: { page, limit, total, totalPages } }',
                       },
                       500: {
                         description: 'Internal Server Error',
@@ -95,7 +106,7 @@ function generateSpecs(routes,models){
                     },
                   };
             }
-            
+
           }else if(method === "POST"){
             summary = 'Create entity';
             
@@ -207,7 +218,7 @@ function generateSpecs(routes,models){
       // console.log(JSON.stringify(definitions, null, 2));
 
       swaggerDefinition.definitions = definitions;
-      swaggerDefinition.components = {"schemas":definitions};
+      swaggerDefinition.components.schemas = definitions;
       
 
       // Generate Swagger specs using swagger-jsdoc
